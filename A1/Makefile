@@ -1,2 +1,2 @@
 fcp: fcp.c fcp.h
-	gcc -Wall fcp.c -o fcp
+	gcc -Wall -lssl -lcrypto fcp.c -o fcp
