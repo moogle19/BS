@@ -16,7 +16,6 @@ int main(int argc, char **argv)
 
     //opens file to copy
     readFile = fopen(argv[1], "r");
-    writeFile = fopen(argv[2], "w");
 
     //checks if fopen was succesful
     if(readFile == NULL)
@@ -24,7 +23,11 @@ int main(int argc, char **argv)
         printf("Failed to open file! \n");
         return -1; //exit program
     }
-    else if(writeFile == NULL)
+
+    //creates destionation file
+    writeFile = fopen(argv[2], "w");
+
+    if(writeFile == NULL)
     {
         printf("Can't create output file! \n");
         return -1; //exit program
