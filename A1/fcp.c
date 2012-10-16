@@ -87,25 +87,35 @@ int main(int argc, char **argv)
 
     readWritten = fopen(argv[2], "rb");
 
-    *input = fgetc(readWritten);
+    if(readWritten == NULL)
+    {
+        printf("%s\n", "Failed to open");
+    }
+
+    printf("%s\n", argv[2]);
+
+    int* newinput = malloc(sizeof(int));
+    *newinput = fgetc(readWritten);
     
     while(*input != EOF)
     {
-        MD5_Update(&c1, input, sizeof(unsigned char));
-        *input = fgetc(readWritten);
+        MD5_Update(&c1, newinput, sizeof(unsigned char));
+        *newinput = fgetc(readWritten);
     }
 
     MD5_Final(controlhash, &c1);
 
-    for(i = 0;i < 16*sizeof(unsigned char); i+=sizeof(unsigned char))
+    int j = 0;
+    for(j = 0;j < 16*sizeof(unsigned char); j+=sizeof(unsigned char))
     {
         //TODO
-        printf("%02x", controlhash[i]); //fuehrende nullen mit %02 erzwingen
+        printf("%02x", controlhash[j]); //fuehrende nullen mit %02 erzwingen
     }
     printf("\n");
 
     //free all the allocated space
     free(input);
+    free(newinput);
     //free(hash);
     //free(c);
     free(readFile);
