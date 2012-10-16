@@ -1,4 +1,3 @@
-VERSION	= 3.02
 CC 	= gcc
 CFLAGS	= -Wall
 LDFLAGS = -lssl -lcrypto
