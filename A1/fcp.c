@@ -70,9 +70,10 @@ int main(int argc, char **argv)
     MD5_Final(hash ,&c);
 
     int i = 0;
-    for(i = 0;i < 32*sizeof(unsigned char); i+=sizeof(unsigned char))
+    for(i = 0;i < 16*sizeof(unsigned char); i+=sizeof(unsigned char))
     {
-        printf("%x", hash[i]);
+        //TODO
+        printf("%02x", hash[i]); //fuehrende nullen mit %02 erzwingen
     }
     printf("\n");
 
