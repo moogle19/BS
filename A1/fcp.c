@@ -39,16 +39,6 @@ int main(int argc, char **argv)
     //MD5_CTX* c = (MD5_CTX*) malloc(16*1024);
     MD5_CTX c;
 
-    /*if(&c == NULL)
-    {
-        printf("%s\n", "Failed to allocate memory");
-        return -1;
-    }
-    else
-    {
-        printf("%s\n", "allocation complete");
-    }*/
-
     //read until end of file
     printf("%s", "reading");
     int* input = malloc(sizeof(int));
