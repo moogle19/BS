@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <openssl/md5.h>
 #include "fcp.h"
 
@@ -15,7 +16,7 @@ int main(int argc, char **argv)
     }
 
     //opens file to copy
-    readFile = fopen(argv[1], "r");
+    readFile = fopen(argv[1], "rb");
 
     //checks if fopen was succesful
     if(readFile == NULL)
@@ -25,7 +26,7 @@ int main(int argc, char **argv)
     }
 
     //creates destionation file
-    writeFile = fopen(argv[2], "w");
+    writeFile = fopen(argv[2], "wb");
 
     if(writeFile == NULL)
     {
@@ -35,24 +36,60 @@ int main(int argc, char **argv)
 
     int bytes = 0; //size of file
 
+    MD5_CTX* c = (MD5_CTX*) malloc(16*1024);
+
+    if(c == NULL)
+    {
+        printf("%s\n", "Failed to allocate memory");
+        return -1;
+    }
+    else
+    {
+        printf("%s\n", "allocation complete");
+    }
+
     //read until end of file
     printf("%s", "reading");
-    int input = 0;
-    input = fgetc(readFile);
-    while(input != EOF)
+    int* input = malloc(sizeof(int));
+    *input = fgetc(readFile);
+
+    unsigned char* hash = (unsigned char*) malloc(32*sizeof(unsigned char));
+
+    MD5_Init(c);
+
+
+
+
+    while(*input != EOF)
     {
         bytes++;
         if(bytes%100000 == 0)
         {
             printf(".");
         }
-        fputc(input, writeFile);
-        input = fgetc(readFile);
+        MD5_Update(c, input, sizeof(int));
+        fputc(*input, writeFile);
+        *input = fgetc(readFile);
     }
 
     printf("\n%d", bytes);
     printf("%s\n", "Byte");
 
+    MD5_Final(hash ,c);
+
+    int i = 0;
+    for(i = 0;i < 32*sizeof(unsigned char); i+=sizeof(unsigned char))
+    {
+        printf("%x", hash[i]);
+    }
+    printf("\n");
+
+    //free all the allocated space
+    free(input);
+    free(hash);
+    free(c);
+    free(readFile);
+    free(writeFile);
 
     return 0;
 }
