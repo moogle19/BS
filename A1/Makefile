@@ -1,2 +1,17 @@
-fcp: fcp.c fcp.h
-	gcc -Wall fcp.c -lssl -lcrypto -o fcp
+VERSION	= 3.02
+CC 	= gcc
+CFLAGS	= -Wall
+LDFLAGS = -lssl -lcrypto
+
+OBJ = fcp.o
+BIN = fcp
+
+fcp: $(OBJ)
+	$(CC) $(CFLAGS) -o fcp $(OBJ) $(LDFLAGS)
+	rm $(OBJ)
+
+%.o: %.c %.h
+	$(CC) $(CFLAGS) -c $<
+
+clean:
+	rm -rf $(BIN) $(OBJ)
