@@ -36,9 +36,10 @@ int main(int argc, char **argv)
 
     int bytes = 0; //size of file
 
-    MD5_CTX* c = (MD5_CTX*) malloc(16*1024);
+    //MD5_CTX* c = (MD5_CTX*) malloc(16*1024);
+    MD5_CTX c;
 
-    if(c == NULL)
+    /*if(&c == NULL)
     {
         printf("%s\n", "Failed to allocate memory");
         return -1;
@@ -46,16 +47,17 @@ int main(int argc, char **argv)
     else
     {
         printf("%s\n", "allocation complete");
-    }
+    }*/
 
     //read until end of file
     printf("%s", "reading");
     int* input = malloc(sizeof(int));
     *input = fgetc(readFile);
 
-    unsigned char* hash = (unsigned char*) malloc(32*sizeof(unsigned char));
+    //unsigned char* hash = (unsigned char*) malloc(32*sizeof(unsigned char));
+    unsigned char hash[16];
 
-    MD5_Init(c);
+    MD5_Init(&c);
 
 
 
@@ -67,7 +69,7 @@ int main(int argc, char **argv)
         {
             printf(".");
         }
-        MD5_Update(c, input, sizeof(int));
+        MD5_Update(&c, input, sizeof(unsigned char));
         fputc(*input, writeFile);
         *input = fgetc(readFile);
     }
@@ -75,7 +77,7 @@ int main(int argc, char **argv)
     printf("\n%d", bytes);
     printf("%s\n", "Byte");
 
-    MD5_Final(hash ,c);
+    MD5_Final(hash ,&c);
 
     int i = 0;
     for(i = 0;i < 32*sizeof(unsigned char); i+=sizeof(unsigned char))
@@ -86,8 +88,8 @@ int main(int argc, char **argv)
 
     //free all the allocated space
     free(input);
-    free(hash);
-    free(c);
+    //free(hash);
+    //free(c);
     free(readFile);
     free(writeFile);
 
