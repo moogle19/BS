@@ -79,11 +79,16 @@ int main(int argc, char **argv)
 
     FILE *readWritten;
     
-    MD5_CTX c1;
+    MD5_CTX check;
 
     unsigned char controlhash[16];
 
-    MD5_Init(&c1);
+    MD5_Init(&check);
+    
+    fflush(writeFile);
+    fclose(writeFile);
+    fflush(readFile);
+    fclose(readFile);
 
     readWritten = fopen(argv[2], "rb");
 
@@ -97,13 +102,13 @@ int main(int argc, char **argv)
     int* newinput = malloc(sizeof(int));
     *newinput = fgetc(readWritten);
     
-    while(*input != EOF)
+    while(*newinput != EOF)
     {
-        MD5_Update(&c1, newinput, sizeof(unsigned char));
+        MD5_Update(&check, newinput, sizeof(unsigned char));
         *newinput = fgetc(readWritten);
     }
 
-    MD5_Final(controlhash, &c1);
+    MD5_Final(controlhash, &check);
 
     int j = 0;
     for(j = 0;j < 16*sizeof(unsigned char); j+=sizeof(unsigned char))
@@ -113,13 +118,18 @@ int main(int argc, char **argv)
     }
     printf("\n");
 
+    //fflush(readWritten);
+    fclose(readWritten);
+
     //free all the allocated space
     free(input);
     free(newinput);
     //free(hash);
     //free(c);
-    free(readFile);
-    free(writeFile);
+    //free(readFile);
+    //free(writeFile);
+    //free(readWritten);
+    printf("%s\n", "end");
 
     return 0;
 }
