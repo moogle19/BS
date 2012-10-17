@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 
     int* input = malloc(BUFSIZE);
 
-    unsigned char hash[16];
+    unsigned char hash[HASHLENGTH];
 
     MD5_Init(&c);
 
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 
     //print original hash
     printf("%s\t", "Original-Hash: ");
-    for(i = 0;i < 16*sizeof(unsigned char); i+=sizeof(unsigned char))
+    for(i = 0;i < HASHLENGTH*sizeof(unsigned char); i+=sizeof(unsigned char))
     {
         printf("%02x", hash[i]); //fuehrende nullen mit %02 erzwingen
     }
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
     int readWritten;
     MD5_CTX check;
 
-    unsigned char controlhash[16];
+    unsigned char controlhash[HASHLENGTH];
 
     MD5_Init(&check);
 
@@ -99,7 +99,7 @@ int main(int argc, char **argv)
 
     //print copy hash
     printf("%s\t", "Copy-Hash: ");
-    for(i = 0;i < 16*sizeof(unsigned char); i+=sizeof(unsigned char))
+    for(i = 0;i < HASHLENGTH*sizeof(unsigned char); i+=sizeof(unsigned char))
     {
         printf("%02x", controlhash[i]); //fuehrende nullen mit %02 erzwingen
         if(hash[i] != controlhash[i])

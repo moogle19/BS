@@ -7,5 +7,6 @@
 #include <openssl/md5.h>
 
 #define BUFSIZE 1024
+#define HASHLENGTH 16
 
 #endif
