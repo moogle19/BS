@@ -74,7 +74,8 @@ int main(int argc, char **argv)
     //test if file opened succesful
     if(readWritten < 0)
     {
-        printf("%s\n", "Failed to open");
+        printf("%s\n", "Failed to open written File!");
+        return -1;
     }
     
     bytes = read(readWritten, inputbuffer, sizeof(inputbuffer));
