@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <openssl/md5.h>
 #include "fcp.h"
 
 int main(int argc, char **argv)
 {
-    FILE *readFile;
-    FILE *writeFile;
+    int readFile;
+    int writeFile;
 
     //checks if number of arguments is correct
     if(argc != 3)
@@ -16,20 +18,20 @@ int main(int argc, char **argv)
     }
 
     //opens file to copy
-    readFile = fopen(argv[1], "rb");
+    readFile = open(argv[1], O_RDONLY);
 
     //checks if fopen was succesful
-    if(readFile == NULL)
+    if(readFile < 0)
     {
         printf("Failed to open file! \n");
         return -1; //exit program
     }
 
     //creates destionation file
-    writeFile = fopen(argv[2], "wb");
+    writeFile = open(argv[2], O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IWUSR | S_IXUSR);
 
     //checks if output file was created
-    if(writeFile == NULL)
+    if(writeFile < 0)
     {
         printf("Can't create output file! \n");
         return -1; //exit program
@@ -38,61 +40,59 @@ int main(int argc, char **argv)
 
     MD5_CTX c;
 
-    int* input = malloc(sizeof(int));
-    *input = fgetc(readFile);
+    int* input = malloc(1024);
 
     unsigned char hash[16];
 
     MD5_Init(&c);
 
+    int count = 0;
+    int i = 0;
+
+
     //read until end of file
-    while(*input != EOF)
-    {
-        MD5_Update(&c, input, sizeof(unsigned char));
-        fputc(*input, writeFile);
-        *input = fgetc(readFile);
+    while(count = read(readFile, input, 1024))
+    {   
+        MD5_Update(&c, input, count);
+        write(writeFile, input, count);
     }
 
     MD5_Final(hash ,&c);
 
     //print original hash
     printf("%s\t", "Original-Hash: ");
-    int i = 0;
     for(i = 0;i < 16*sizeof(unsigned char); i+=sizeof(unsigned char))
     {
         printf("%02x", hash[i]); //fuehrende nullen mit %02 erzwingen
     }
     printf("\n");
 
-    //flush and close write and read
-    fflush(writeFile);
-    fclose(writeFile);
-    fflush(readFile);
-    fclose(readFile);
+    //fclose write and read
+    close(writeFile);
+    close(readFile);
 
 
     //check copyied file
-    FILE *readWritten;
+    int readWritten;
     MD5_CTX check;
 
     unsigned char controlhash[16];
 
     MD5_Init(&check);
 
-    readWritten = fopen(argv[2], "rb");
+    readWritten = open(argv[2], O_RDONLY);
 
-    if(readWritten == NULL)
+    if(readWritten < 0)
     {
         printf("%s\n", "Failed to open");
     }
 
-    int* newinput = malloc(sizeof(int));
-    *newinput = fgetc(readWritten);
+    count = 0;
+    int* newinput = malloc(1024);
     
-    while(*newinput != EOF)
+    while(count = read(readWritten, newinput, 1024))
     {
-        MD5_Update(&check, newinput, sizeof(unsigned char));
-        *newinput = fgetc(readWritten);
+            MD5_Update(&check, newinput, count);
     }
 
     MD5_Final(controlhash, &check);
@@ -103,7 +103,6 @@ int main(int argc, char **argv)
     printf("%s\t", "Copy-Hash: ");
     for(i = 0;i < 16*sizeof(unsigned char); i+=sizeof(unsigned char))
     {
-        //TODO
         printf("%02x", controlhash[i]); //fuehrende nullen mit %02 erzwingen
         if(hash[i] != controlhash[i])
         {
@@ -112,9 +111,8 @@ int main(int argc, char **argv)
     }
     printf("\n");
 
-    //flush and close
-    fflush(readWritten);
-    fclose(readWritten);
+    //close
+    close(readWritten);
 
     //free all the allocated space
     free(input);
