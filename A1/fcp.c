@@ -2,9 +2,13 @@
 
 int main(int argc, char **argv)
 {
-    int readFile;
-    int writeFile;
+    int readFile, writeFile, readWritten;
+    int* inputbuffer = malloc(BUFSIZE);
+    int bytes = 0, i = 0, hashcheck = 1;
+    MD5_CTX c; //init MD5 variable
+    unsigned char hash[HASHLENGTH], controlhash[HASHLENGTH]; //init variable for hash
 
+    
     //checks if number of arguments is correct
     if(argc != 3)
     {
@@ -32,17 +36,7 @@ int main(int argc, char **argv)
         return -1; //exit program
     }
 
-
-    MD5_CTX c; //init MD5 variable
-
-    int* inputbuffer = malloc(BUFSIZE); //init buffer for copying
-
-    unsigned char hash[HASHLENGTH]; //init variable for hash
-
     MD5_Init(&c); //init MD5
-
-    int bytes = 0;
-    int i = 0;
 
     //read source file
     bytes = read(readFile, inputbuffer, sizeof(inputbuffer));
@@ -70,13 +64,9 @@ int main(int argc, char **argv)
         printf("%02x", hash[i]); //fuehrende nullen mit %02 erzwingen
     }
     printf("\n");
-    
 
     /* Check copyied file */
-    int readWritten;
-
-    unsigned char controlhash[HASHLENGTH];
-
+    
     MD5_Init(&c); //reinit MD5 for write-success test
 
     readWritten = open(argv[2], O_RDONLY); //open previously written file
@@ -86,21 +76,18 @@ int main(int argc, char **argv)
     {
         printf("%s\n", "Failed to open");
     }
-
-    bytes = 0;
-    int* newinputbuffer = malloc(BUFSIZE);
-    bytes = read(readWritten, newinputbuffer, sizeof(newinputbuffer));
+    
+    bytes = read(readWritten, inputbuffer, sizeof(inputbuffer));
 
     while(bytes)
     {
-            MD5_Update(&c, newinputbuffer, bytes);
-            bytes = read(readWritten, newinputbuffer, sizeof(newinputbuffer));
+            MD5_Update(&c, inputbuffer, bytes);
+            bytes = read(readWritten, inputbuffer, sizeof(inputbuffer));
     }
 
     //finalize MD5 Hash
     MD5_Final(controlhash, &c);
 
-    int hashcheck = 1; //checkvalue for equality of hashes
 
     //print copy hash
     printf("%s\t", "Copy-Hash: ");
@@ -120,7 +107,7 @@ int main(int argc, char **argv)
 
     //free all the allocated space
     free(inputbuffer);
-    free(newinputbuffer);
+    //free(newinputbuffer);
 
     //output success or failure
     if(hashcheck)
