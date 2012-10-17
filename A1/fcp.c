@@ -49,12 +49,13 @@ int main(int argc, char **argv)
     int count = 0;
     int i = 0;
 
-
+    count = read(readFile, input, 1024);
     //read until end of file
-    while(count = read(readFile, input, 1024))
+    while(count)
     {   
         MD5_Update(&c, input, count);
         write(writeFile, input, count);
+        count = read(readFile, input, 1024);
     }
 
     MD5_Final(hash ,&c);
@@ -89,10 +90,12 @@ int main(int argc, char **argv)
 
     count = 0;
     int* newinput = malloc(1024);
-    
-    while(count = read(readWritten, newinput, 1024))
+    count = read(readWritten, newinput, 1024);
+
+    while(count)
     {
             MD5_Update(&check, newinput, count);
+            count = read(readWritten, newinput, 1024);
     }
 
     MD5_Final(controlhash, &check);
