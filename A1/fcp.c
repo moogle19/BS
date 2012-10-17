@@ -1,8 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <openssl/md5.h>
 #include "fcp.h"
 
 int main(int argc, char **argv)
@@ -40,7 +35,7 @@ int main(int argc, char **argv)
 
     MD5_CTX c;
 
-    int* input = malloc(1024);
+    int* input = malloc(BUFSIZE);
 
     unsigned char hash[16];
 
@@ -49,13 +44,13 @@ int main(int argc, char **argv)
     int count = 0;
     int i = 0;
 
-    count = read(readFile, input, 1024);
+    count = read(readFile, input, sizeof(input));
     //read until end of file
     while(count)
     {   
         MD5_Update(&c, input, count);
         write(writeFile, input, count);
-        count = read(readFile, input, 1024);
+        count = read(readFile, input, sizeof(input));
     }
 
     MD5_Final(hash ,&c);
@@ -89,13 +84,13 @@ int main(int argc, char **argv)
     }
 
     count = 0;
-    int* newinput = malloc(1024);
-    count = read(readWritten, newinput, 1024);
+    int* newinput = malloc(BUFSIZE);
+    count = read(readWritten, newinput, sizeof(newinput));
 
     while(count)
     {
             MD5_Update(&check, newinput, count);
-            count = read(readWritten, newinput, 1024);
+            count = read(readWritten, newinput, sizeof(newinput));
     }
 
     MD5_Final(controlhash, &check);
