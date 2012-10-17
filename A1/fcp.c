@@ -8,7 +8,7 @@ int main(int argc, char **argv)
     //checks if number of arguments is correct
     if(argc != 3)
     {
-        printf("False number of Arguments!\n");
+        printf("False number of Arguments!\nUsing: ./fcp <File to Copy> <Destination>\n");
         return -1; //exit program
     }
 
@@ -22,8 +22,8 @@ int main(int argc, char **argv)
         return -1; //exit program
     }
 
-    //creates destionation file
-    writeFile = open(argv[2], O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IWUSR | S_IXUSR);
+    //creates destionation file with write-only and set read/write/execution-rights for user
+    writeFile = open(argv[2], O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWUSR | S_IXUSR);
 
     //checks if output file was created
     if(writeFile < 0)
@@ -33,27 +33,35 @@ int main(int argc, char **argv)
     }
 
 
-    MD5_CTX c;
+    MD5_CTX c; //init MD5 variable
 
-    int* input = malloc(BUFSIZE);
+    int* inputbuffer = malloc(BUFSIZE); //init buffer for copying
 
-    unsigned char hash[HASHLENGTH];
+    unsigned char hash[HASHLENGTH]; //init variable for hash
 
-    MD5_Init(&c);
+    MD5_Init(&c); //init MD5
 
-    int count = 0;
+    int bytes = 0;
     int i = 0;
 
-    count = read(readFile, input, sizeof(input));
-    //read until end of file
-    while(count)
+    //read source file
+    bytes = read(readFile, inputbuffer, sizeof(inputbuffer));
+    
+    //read until no bytes left
+    while(bytes)
     {   
-        MD5_Update(&c, input, count);
-        write(writeFile, input, count);
-        count = read(readFile, input, sizeof(input));
+        MD5_Update(&c, inputbuffer, bytes); //update md5 hash with current bytes
+        write(writeFile, inputbuffer, bytes); //write current bytes
+        bytes = read(readFile, inputbuffer, sizeof(inputbuffer)); //read new data
     }
 
-    MD5_Final(hash ,&c);
+    MD5_Final(hash ,&c); //finalize MD5 Hash
+
+    //close write and read
+    close(writeFile);
+    close(readFile);
+
+    printf("%s\n", "Done Copying!");
 
     //print original hash
     printf("%s\t", "Original-Hash: ");
@@ -62,46 +70,44 @@ int main(int argc, char **argv)
         printf("%02x", hash[i]); //fuehrende nullen mit %02 erzwingen
     }
     printf("\n");
+    
 
-    //fclose write and read
-    close(writeFile);
-    close(readFile);
-
-
-    //check copyied file
+    /* Check copyied file */
     int readWritten;
-    MD5_CTX check;
 
     unsigned char controlhash[HASHLENGTH];
 
-    MD5_Init(&check);
+    MD5_Init(&c); //reinit MD5 for write-success test
 
-    readWritten = open(argv[2], O_RDONLY);
+    readWritten = open(argv[2], O_RDONLY); //open previously written file
 
+    //test if file opened succesful
     if(readWritten < 0)
     {
         printf("%s\n", "Failed to open");
     }
 
-    count = 0;
-    int* newinput = malloc(BUFSIZE);
-    count = read(readWritten, newinput, sizeof(newinput));
+    bytes = 0;
+    int* newinputbuffer = malloc(BUFSIZE);
+    bytes = read(readWritten, newinputbuffer, sizeof(newinputbuffer));
 
-    while(count)
+    while(bytes)
     {
-            MD5_Update(&check, newinput, count);
-            count = read(readWritten, newinput, sizeof(newinput));
+            MD5_Update(&c, newinputbuffer, bytes);
+            bytes = read(readWritten, newinputbuffer, sizeof(newinputbuffer));
     }
 
-    MD5_Final(controlhash, &check);
+    //finalize MD5 Hash
+    MD5_Final(controlhash, &c);
 
-    int hashcheck = 1;
+    int hashcheck = 1; //checkvalue for equality of hashes
 
     //print copy hash
     printf("%s\t", "Copy-Hash: ");
     for(i = 0;i < HASHLENGTH*sizeof(unsigned char); i+=sizeof(unsigned char))
     {
         printf("%02x", controlhash[i]); //fuehrende nullen mit %02 erzwingen
+        //check if hashes are equal
         if(hash[i] != controlhash[i])
         {
             hashcheck = 0;
@@ -113,8 +119,8 @@ int main(int argc, char **argv)
     close(readWritten);
 
     //free all the allocated space
-    free(input);
-    free(newinput);
+    free(inputbuffer);
+    free(newinputbuffer);
 
     //output success or failure
     if(hashcheck)
