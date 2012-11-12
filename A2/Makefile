@@ -3,13 +3,20 @@ CFLAGS	= -Wall
 LDFLAGS = -lssl -lcrypto
 
 OBJ = memusage.o
-BIN = memusage.C
+OBJ1 = memalloc.o
+BIN = memusage
+BIN1 = memalloc
+
+all: memusage memalloc
 
 memusage: $(OBJ)
 	$(CC) $(CFLAGS) -o $(BIN) $(OBJ) $(LDFLAGS)
 
-%.o: %.c %.h
+memalloc: $(OBJ1)
+	$(CC) $(CFLAGS) -o $(BIN1) $(OBJ1) $(LDFLAGS)
+
+%.o: %.C %.h
 	$(CC) $(CFLAGS) -c $<
 
 clean:
-	rm -rf $(BIN) $(OBJ)
+	rm -rf $(BIN) $(OBJ) $(BIN1) $(OBJ1)

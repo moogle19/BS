@@ -13,7 +13,6 @@ int main(int argc, char** argv)
 	int mc = 1, nc = 1, tc = 1, pc = 1;
 
 	signal(SIGINT, handleSigInt);
-	int input = 0;
 	if(argc > 1)
 	{
 		int i = 0;
@@ -104,15 +103,18 @@ int main(int argc, char** argv)
 
 		long int pidtmp = 0L;
 
+
+		//read the /proc directory
 		while(procpoint = readdir(procdir))
 		{
+			//check if directoryname is an integer
 			if((pidtmp = strtol(procpoint->d_name, NULL, 10)) > 0)
 			{
-				*pid = pidtmp;
+				*pid = pidtmp; //save pid
 				pid++;
 
-				char* pidstr = (char*)malloc(strlen(procpoint->d_name)*sizeof(char));
-				strcpy(pidstr, procpoint->d_name);
+				char* pidstr = (char*)malloc(strlen(procpoint->d_name)*sizeof(char)); 
+				strcpy(pidstr, procpoint->d_name); //save pid as string
 
 
 				//access status-file
@@ -120,19 +122,20 @@ int main(int argc, char** argv)
 
 				char* path = (char*)malloc(pathlength*sizeof(char));
 
-				int buffersize = BUFSIZE;
 				char* tmp;
 
+				//make status-path
 				strcpy(path, PROCPATH);
 				strcat(path, pidstr);
 				strcat(path, STATUS);
 
-				file = fopen(path, "r");
+				file = fopen(path, "r"); //open status file
 				if(file == NULL)
 				{
 					perror("Failed to access statusfile!");
 				}
-				*vmem = 0L;
+
+				*vmem = 0L; //set vmem to zero in case proccess has no vmsize entry
 				while(! feof(file))
 				{
 					if((fgets(buffer, BUFSIZE, file)) != NULL)
@@ -152,16 +155,18 @@ int main(int argc, char** argv)
 						}
 					}
 				}
+				//increment pointer
 				++vmem;
 				++state;
 
-				//printf("%ld\n", vmempos[pointerpos]);
+				//close file and free path
 				fclose(file);
 				free(path);
 
 				//access cmd-file
 				pathlength = strlen(PROCPATH) + strlen(CMD) + strlen(pidstr);
 				path = (char*)malloc(pathlength*sizeof(char));
+
 				strcpy(path, PROCPATH);
 				strcat(path, pidstr);
 				strcat(path, CMD);
@@ -208,17 +213,20 @@ int main(int argc, char** argv)
 		{
 			for(j = 1; j < proccount; j++)
 			{
-				
+
 			}
 		}
 
+		//set variable for max output
 		long int max = proccount;
 
+		//if n is set max output = n
 		if(n)
 		{
 			max = n;
-			printf("%d\n", n);
 		}
+
+		//print the entrys
 		for(i = 0; i < max; i++)
 		{
 			printf("%ld\t%ld\t%c\t%s\n", *pid, *vmem, *state, *cmd);
@@ -227,15 +235,9 @@ int main(int argc, char** argv)
 			state++;
 			cmd++;
 		}
+
+
 		rewinddir(procdir);
-
-
-
-
-
-
-
-
 
 		//free all stuff
 		pid = pidpos;
@@ -253,9 +255,6 @@ int main(int argc, char** argv)
 		free(vmem);
 		free(state);
 		free(cmd);
-
-
-
 		free(buffer);
 		closedir(procdir);
 
