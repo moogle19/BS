@@ -9,6 +9,10 @@
 #include <dirent.h>
 #include <signal.h>
 
-#define TEXTBUF 128
+#define BUFSIZE 128
+
+#define PROCPATH "/proc/"
+#define CMD "/cmdline"
+#define STATUS "/status"
 
 #endif

@@ -3,7 +3,7 @@ CFLAGS	= -Wall
 LDFLAGS = -lssl -lcrypto
 
 OBJ = memusage.o
-BIN = memusage
+BIN = memusage.C
 
 memusage: $(OBJ)
 	$(CC) $(CFLAGS) -o $(BIN) $(OBJ) $(LDFLAGS)
