@@ -150,9 +150,22 @@ int main(int argc, char** argv)
 			int cmdcount = 0;
 			for(cmdcount = 0; cmdcount < proccount; cmdcount++)
 			{
+				//initalize all values in case process count between loops is lowered
 				*cmd = (char*)malloc(BUFSIZE*sizeof(char));
+				strcpy(*cmd, "[No cmd]");
+
+				*pid = 0L;
+				*vmem = 0L;
+				*state = '-';
+
+				++pid;
+				++vmem;
+				++state;
 				++cmd;
 			}
+			pid = pidpos;
+			vmem = vmempos;
+			state = statepos;
 			cmd = cmdpos;
 
 			char* buffer = (char*)malloc(BUFSIZE*sizeof(char));
@@ -187,10 +200,6 @@ int main(int argc, char** argv)
 					strcpy(path, PROCPATH);
 					strcat(path, pidstr);
 					strcat(path, STATUS);
-
-					//init values
-					*vmem = 0L; //set vmem to zero in case proccess has no vmsize entry
-					*state = '-'; //set state to default in case proccess has no state
 
 					file = NULL;
 					file = fopen(path, "r"); //open status file
