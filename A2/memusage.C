@@ -1,19 +1,36 @@
 #include "memusage.h"
 
 int gContinue = 1;
+long int* vmem;
 
 void handleSigInt(int )
 {
 	gContinue = 0;
 }
 
+int sizeCmp(const void* val1, const void* val2)
+{
+	int* value1 = (int*)val1;
+	int* value2 = (int*)val2;
+	if(vmem[*value1] < vmem[*value2])
+	{
+		return -1;
+	}
+	else
+	{
+		return 1;
+	}
+}
+
 int main(int argc, char** argv)
 {
-	int m = 0, n = 0, t = 3, p = 0;
+	long int m = 0, n = 0, t = 3, p = 0;
 	int mc = 1, nc = 1, tc = 1, pc = 1;
 
+	//signal interrupt handling
 	signal(SIGINT, handleSigInt);
 
+	//check console input
 	if(argc > 1)
 	{
 		int i = 0;
@@ -30,7 +47,8 @@ int main(int argc, char** argv)
 				long int nd = strtol(argv[++i], NULL, 10);
 				if(nd == 0L)
 				{
-					printf("%s\n", "Fail");
+					perror("Wrong value for -N (No int) ! Usage: ./memusage [-m] [-N <num>] [-T <sec>] [-P <pid>]");
+					return -1;
 				} //test
 				else
 				{
@@ -41,12 +59,34 @@ int main(int argc, char** argv)
 			}
 			else if(!strcmp(argv[i], "-T") && tc)
 			{
-				t = atoi(argv[++i]);
+				//t = atoi(argv[++i]);
+				long int td = strtol(argv[++i], NULL, 10);
+				if(td == 0L)
+				{
+					perror("Wrong value for -T (No int) ! Usage: ./memusage [-m] [-N <num>] [-T <sec>] [-P <pid>]");
+					return -1;
+				} //test
+				else
+				{
+					t = td;
+					//printf("%ld\n", nd);
+				}
 				tc = 0;
 			}
 			else if(!strcmp(argv[i], "-P") && pc)
 			{
-				p = atoi(argv[++i]);
+				//p = atoi(argv[++i]);
+				long int pd = strtol(argv[++i], NULL, 10);
+				if(pd == 0L)
+				{
+					perror("Wrong value for -P (No int) ! Usage: ./memusage [-m] [-N <num>] [-T <sec>] [-P <pid>]");
+					return -1;
+				} //test
+				else
+				{
+					p = pd;
+					//printf("%ld\n", nd);
+				}
 				pc = 0;
 			}
 			else
@@ -57,14 +97,16 @@ int main(int argc, char** argv)
 		}
 	}
 
+
 	//directory init
 	DIR* procdir;
 	struct dirent* procpoint;
 	int proccount = 0;
 
+	//output loop
 	while(gContinue)
 	{	
-
+		//open /proc directory
 		procdir = opendir("/proc");
 		if(procdir == NULL)
 		{
@@ -77,6 +119,7 @@ int main(int argc, char** argv)
 			FILE* file;
 			proccount = 0;
 
+			//set procdir to start
 			rewinddir(procdir);
 			
 			//get number of running processes
@@ -91,11 +134,11 @@ int main(int argc, char** argv)
 			}
 			rewinddir(procdir);
 
-			//pointer for all values
+			//pointer init for all values
 			long int* pid = (long int*)malloc(proccount*sizeof(long int));
 			long int* pidpos = pid;
 
-			long int* vmem = (long int*)malloc(proccount*sizeof(long int));
+			/*long int*/ vmem = (long int*)malloc(proccount*sizeof(long int));
 			long int* vmempos = vmem;
 
 			char* state = (char*)malloc(proccount*sizeof(char));
@@ -103,6 +146,14 @@ int main(int argc, char** argv)
 
 			char** cmd = (char**)malloc(proccount*sizeof(char*));
 			char** cmdpos = cmd;
+
+			int cmdcount = 0;
+			for(cmdcount = 0; cmdcount < proccount; cmdcount++)
+			{
+				*cmd = (char*)malloc(BUFSIZE*sizeof(char));
+				++cmd;
+			}
+			cmd = cmdpos;
 
 			char* buffer = (char*)malloc(BUFSIZE*sizeof(char));
 
@@ -118,8 +169,9 @@ int main(int argc, char** argv)
 				if((pidtmp = strtol(procpoint->d_name, NULL, 10)) > 0)
 				{
 					*pid = pidtmp; //save pid
-					pid++;
+					pid++; //increment pid pointer
 
+					//create string with pid for file access
 					char* pidstr = (char*)malloc(strlen(procpoint->d_name)*sizeof(char)); 
 					strcpy(pidstr, procpoint->d_name); //save pid as string
 
@@ -136,14 +188,16 @@ int main(int argc, char** argv)
 					strcat(path, pidstr);
 					strcat(path, STATUS);
 
+					//init values
 					*vmem = 0L; //set vmem to zero in case proccess has no vmsize entry
+					*state = '-'; //set state to default in case proccess has no state
 
+					file = NULL;
 					file = fopen(path, "r"); //open status file
 					if(file == NULL)
 					{
 						printf("%s\n", path);;
 						perror("Failed to access statusfile!");
-						*state = '-';
 						//return -1;
 					}
 					else
@@ -186,8 +240,7 @@ int main(int argc, char** argv)
 					strcat(path, pidstr);
 					strcat(path, CMD);
 
-					*cmd = (char*)malloc(BUFSIZE*sizeof(char));
-
+					file = NULL;
 					file = fopen(path, "r");
 					if(file == NULL)
 					{
@@ -230,23 +283,21 @@ int main(int argc, char** argv)
 			cmd = cmdpos;
 
 
-			int i = 0;
-			int j = 0;
+			int j = 0;	
 
-			//sort size
-			long int minval = 0L;
-			long int oldminval = 0L;
-			int min = 0;
+			int* sorted = (int*)malloc(proccount*sizeof(int));
+			int* sortedpos = sorted;
 
-			minval = vmem[0];
-			for(j = 1; j < proccount; j++)
+			for(j = 0; j < proccount; j++)
 			{
-				if(j != min && vmem[i] < minval)
-				{
-					minval = vmem[i];
-					min = j;
-				}
+				sorted[j] = j;
 			}
+			if(m)
+			{
+				qsort(sorted, proccount, sizeof(int), sizeCmp);
+			}
+
+
 
 			//set variable for max output
 			long int max = proccount;
@@ -257,14 +308,26 @@ int main(int argc, char** argv)
 				max = n;
 			}
 
-			//print the entrys
-			for(i = 0; i < max; i++)
+			if(p)
 			{
-				printf("%ld\t%ld\t%c\t%s\n", *pid, *vmem, *state, *cmd);
-				pid++;
-				vmem++;
-				state++;
-				cmd++;
+				for(j = 0; j < proccount; j++)
+				{
+					if(p == pid[j])
+					{
+						printf("%ld\t%ld\t%c\t%s\n", pid[j], vmem[j], state[j], cmd[j]);
+					}
+				}
+
+			}
+			else
+			{
+				//print the entrys
+				for(j = 0; j < max; j++)
+				{
+					printf("%ld\t%ld\t%c\t%s\n", pid[*sorted], vmem[*sorted], state[*sorted], cmd[*sorted]);
+					sorted++;
+				}
+				sorted = sortedpos;
 			}
 
 
@@ -276,7 +339,7 @@ int main(int argc, char** argv)
 			state = statepos;
 			cmd = cmdpos;
 
-			for(i = 0; i < proccount; i++)
+			for(j = 0; j < proccount; j++)
 			{	
 				free(*cmd);
 				cmd++;
@@ -287,6 +350,7 @@ int main(int argc, char** argv)
 			free(state);
 			free(cmd);
 			free(buffer);
+			free(sorted);
 			closedir(procdir);
 
 
