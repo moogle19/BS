@@ -95,6 +95,8 @@ int main(int argc, char const *argv[])
 		return -1;
 	}
 
+	
+
 	int steps = 0;
 	steps = m/s;
 	if(m%s != 0)

@@ -71,213 +71,228 @@ int main(int argc, char** argv)
 			perror("Failed to open /proc");
 			return -1;
 		}
-
-		FILE* file;
-		proccount = 0;
-
-		rewinddir(procdir);
-		
-		//get number of running processes
-		procpoint = readdir(procdir);
-		while(procpoint)
+		else
 		{
-			if(strtol(procpoint->d_name, NULL, 10) > 0)
-			{
-				proccount++;
-			}
+
+			FILE* file;
+			proccount = 0;
+
+			rewinddir(procdir);
+			
+			//get number of running processes
 			procpoint = readdir(procdir);
-		}
-		rewinddir(procdir);
-
-		//pointer for all values
-		long int* pid = (long int*)malloc(proccount*sizeof(long int));
-		long int* pidpos = pid;
-
-		long int* vmem = (long int*)malloc(proccount*sizeof(long int));
-		long int* vmempos = vmem;
-
-		char* state = (char*)malloc(proccount*sizeof(char));
-		char* statepos = state;
-
-		char** cmd = (char**)malloc(proccount*sizeof(char*));
-		char** cmdpos = cmd;
-
-		char* buffer = (char*)malloc(BUFSIZE*sizeof(char));
-
-		long int pidtmp = 0L;
-		//check if count of running processes has changed
-		int checkcount = 0;
-
-		//read the /proc directory
-		procpoint = readdir(procdir);
-		while(procpoint && checkcount <= proccount)
-		{
-			//check if directoryname is an integer
-			if((pidtmp = strtol(procpoint->d_name, NULL, 10)) > 0)
+			while(procpoint)
 			{
-				*pid = pidtmp; //save pid
-				pid++;
-
-				char* pidstr = (char*)malloc(strlen(procpoint->d_name)*sizeof(char)); 
-				strcpy(pidstr, procpoint->d_name); //save pid as string
-
-
-				//access status-file
-				int pathlength = strlen(PROCPATH) + strlen(STATUS) + strlen(pidstr);
-
-				char* path = (char*)malloc(pathlength*sizeof(char));
-
-				char* tmp;
-
-				//make status-path
-				strcpy(path, PROCPATH);
-				strcat(path, pidstr);
-				strcat(path, STATUS);
-
-				file = fopen(path, "r"); //open status file
-				if(file == NULL)
+				if(strtol(procpoint->d_name, NULL, 10) > 0)
 				{
-					perror("Failed to access statusfile!");
+					proccount++;
 				}
+				procpoint = readdir(procdir);
+			}
+			rewinddir(procdir);
 
-				*vmem = 0L; //set vmem to zero in case proccess has no vmsize entry
-				while(! feof(file))
+			//pointer for all values
+			long int* pid = (long int*)malloc(proccount*sizeof(long int));
+			long int* pidpos = pid;
+
+			long int* vmem = (long int*)malloc(proccount*sizeof(long int));
+			long int* vmempos = vmem;
+
+			char* state = (char*)malloc(proccount*sizeof(char));
+			char* statepos = state;
+
+			char** cmd = (char**)malloc(proccount*sizeof(char*));
+			char** cmdpos = cmd;
+
+			char* buffer = (char*)malloc(BUFSIZE*sizeof(char));
+
+			long int pidtmp = 0L;
+			//check if count of running processes has changed
+			int checkcount = 0;
+
+			//read the /proc directory
+			procpoint = readdir(procdir);
+			while(procpoint && checkcount <= proccount)
+			{
+				//check if directoryname is an integer
+				if((pidtmp = strtol(procpoint->d_name, NULL, 10)) > 0)
 				{
-					if((fgets(buffer, BUFSIZE, file)) != NULL)
-					{	
-						//strcpy(statusline, buffer);
-						if(strncmp(buffer, "VmSize:", 7) == 0)
-						{
-							tmp = strtok(buffer, " ");
-							tmp = strtok(NULL, " ");
-							*vmem = strtol(tmp, NULL, 10);
-						}
-						else if(strncmp(buffer, "State", 5) == 0)
-						{
-							tmp = strtok(buffer, "\t ");
-							tmp = strtok(NULL, "\t ");
-							*state = tmp[0];
-						}
+					*pid = pidtmp; //save pid
+					pid++;
+
+					char* pidstr = (char*)malloc(strlen(procpoint->d_name)*sizeof(char)); 
+					strcpy(pidstr, procpoint->d_name); //save pid as string
+
+
+					//access status-file
+					int pathlength = strlen(PROCPATH) + strlen(STATUS) + strlen(pidstr);
+
+					char* path = (char*)malloc(pathlength*sizeof(char));
+
+					char* tmp;
+
+					//make status-path
+					strcpy(path, PROCPATH);
+					strcat(path, pidstr);
+					strcat(path, STATUS);
+
+					*vmem = 0L; //set vmem to zero in case proccess has no vmsize entry
+
+					file = fopen(path, "r"); //open status file
+					if(file == NULL)
+					{
+						printf("%s\n", path);;
+						perror("Failed to access statusfile!");
+						*state = '-';
+						//return -1;
 					}
+					else
+					{
+
+						while(! feof(file))
+						{
+							if((fgets(buffer, BUFSIZE, file)) != NULL)
+							{	
+								//strcpy(statusline, buffer);
+								if(strncmp(buffer, "VmSize:", 7) == 0)
+								{
+									tmp = strtok(buffer, " ");
+									tmp = strtok(NULL, " ");
+									*vmem = strtol(tmp, NULL, 10);
+								}
+								else if(strncmp(buffer, "State", 5) == 0)
+								{
+									tmp = strtok(buffer, "\t ");
+									tmp = strtok(NULL, "\t ");
+									*state = tmp[0];
+								}
+							}
+						}
+						fclose(file);
+
+					}
+					//increment pointer
+					++vmem;
+					++state;
+
+					//close file and free path
+					free(path);
+
+					//access cmd-file
+					pathlength = strlen(PROCPATH) + strlen(CMD) + strlen(pidstr);
+					path = (char*)malloc(pathlength*sizeof(char));
+
+					strcpy(path, PROCPATH);
+					strcat(path, pidstr);
+					strcat(path, CMD);
+
+					*cmd = (char*)malloc(BUFSIZE*sizeof(char));
+
+					file = fopen(path, "r");
+					if(file == NULL)
+					{
+						perror("Failed to access cmdfile!");
+						strcpy(*cmd, "[CLOSED]");
+						//return -1;
+
+					}
+					else
+					{
+						if((fgets(buffer, BUFSIZE, file)) != NULL)
+						{ 
+							//*cmd = (char*)malloc(BUFSIZE*sizeof(char));
+							strcpy(*cmd, buffer);
+							//puts(cmdline);
+						}
+						else
+						{	
+							//*cmd = (char*)malloc(BUFSIZE*sizeof(char));
+							strcpy(*cmd, "[ZOMBIE]");
+							//puts(cmdline);
+						}
+						fclose(file);
+					}
+
+					++cmd;
+
+
+					free(path);
+					free(pidstr);
+					++checkcount;
 				}
-				//increment pointer
-				++vmem;
-				++state;
 
-				//close file and free path
-				fclose(file);
-				free(path);
+				procpoint = readdir(procdir);
 
-				//access cmd-file
-				pathlength = strlen(PROCPATH) + strlen(CMD) + strlen(pidstr);
-				path = (char*)malloc(pathlength*sizeof(char));
-
-				strcpy(path, PROCPATH);
-				strcat(path, pidstr);
-				strcat(path, CMD);
-
-
-				file = fopen(path, "r");
-				if(file == NULL)
-				{
-					perror("Failed to access cmdfile!");
-				}
-				*cmd = (char*)malloc(BUFSIZE*sizeof(char));
-
-	
-				if((fgets(buffer, BUFSIZE, file)) != NULL)
-				{ 
-					//*cmd = (char*)malloc(BUFSIZE*sizeof(char));
-					strcpy(*cmd, buffer);
-					//puts(cmdline);
-				}
-				else
-				{	
-					//*cmd = (char*)malloc(BUFSIZE*sizeof(char));
-					strcpy(*cmd, "[ZOMBIE]");
-					//puts(cmdline);
-				}
-
-				++cmd;
-
-				fclose(file);
-
-				free(path);
-				free(pidstr);
-				++checkcount;
 			}
-
-			procpoint = readdir(procdir);
-
-		}
-		pid = pidpos;
-		vmem = vmempos;
-		state = statepos;
-		cmd = cmdpos;
+			pid = pidpos;
+			vmem = vmempos;
+			state = statepos;
+			cmd = cmdpos;
 
 
-		int i = 0;
-		int j = 0;
+			int i = 0;
+			int j = 0;
 
-		//sort size
-		long int minval = 0L;
-		long int oldminval = 0L;
-		int min = 0;
+			//sort size
+			long int minval = 0L;
+			long int oldminval = 0L;
+			int min = 0;
 
-		minval = vmem[0];
-		for(j = 1; j < proccount; j++)
-		{
-			if(j != min && vmem[i] < minval)
+			minval = vmem[0];
+			for(j = 1; j < proccount; j++)
 			{
-				minval = vmem[i];
-				min = j;
+				if(j != min && vmem[i] < minval)
+				{
+					minval = vmem[i];
+					min = j;
+				}
 			}
+
+			//set variable for max output
+			long int max = proccount;
+
+			//if n is set max output = n
+			if(n)
+			{
+				max = n;
+			}
+
+			//print the entrys
+			for(i = 0; i < max; i++)
+			{
+				printf("%ld\t%ld\t%c\t%s\n", *pid, *vmem, *state, *cmd);
+				pid++;
+				vmem++;
+				state++;
+				cmd++;
+			}
+
+
+			rewinddir(procdir);
+
+			//free all stuff
+			pid = pidpos;
+			vmem = vmempos;
+			state = statepos;
+			cmd = cmdpos;
+
+			for(i = 0; i < proccount; i++)
+			{	
+				free(*cmd);
+				cmd++;
+			}
+			cmd = cmdpos;
+			free(pid);
+			free(vmem);
+			free(state);
+			free(cmd);
+			free(buffer);
+			closedir(procdir);
+
+
+			sleep(t);
+			system("clear");
 		}
-
-		//set variable for max output
-		long int max = proccount;
-
-		//if n is set max output = n
-		if(n)
-		{
-			max = n;
-		}
-
-		//print the entrys
-		for(i = 0; i < max; i++)
-		{
-			printf("%ld\t%ld\t%c\t%s\n", *pid, *vmem, *state, *cmd);
-			pid++;
-			vmem++;
-			state++;
-			cmd++;
-		}
-
-
-		rewinddir(procdir);
-
-		//free all stuff
-		pid = pidpos;
-		vmem = vmempos;
-		state = statepos;
-		cmd = cmdpos;
-
-		for(i = 0; i < proccount; i++)
-		{	
-			free(*cmd);
-			cmd++;
-		}
-		cmd = cmdpos;
-		free(pid);
-		free(vmem);
-		free(state);
-		free(cmd);
-		free(buffer);
-		closedir(procdir);
-
-
-		sleep(t);
-		system("clear");
 
 	}
 
