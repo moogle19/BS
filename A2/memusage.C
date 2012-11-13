@@ -13,6 +13,7 @@ int main(int argc, char** argv)
 	int mc = 1, nc = 1, tc = 1, pc = 1;
 
 	signal(SIGINT, handleSigInt);
+
 	if(argc > 1)
 	{
 		int i = 0;
@@ -77,12 +78,14 @@ int main(int argc, char** argv)
 		rewinddir(procdir);
 		
 		//get number of running processes
-		while(procpoint = readdir(procdir))
+		procpoint = readdir(procdir);
+		while(procpoint)
 		{
 			if(strtol(procpoint->d_name, NULL, 10) > 0)
 			{
 				proccount++;
 			}
+			procpoint = readdir(procdir);
 		}
 		rewinddir(procdir);
 
@@ -102,10 +105,12 @@ int main(int argc, char** argv)
 		char* buffer = (char*)malloc(BUFSIZE*sizeof(char));
 
 		long int pidtmp = 0L;
-
+		//check if count of running processes has changed
+		int checkcount = 0;
 
 		//read the /proc directory
-		while(procpoint = readdir(procdir))
+		procpoint = readdir(procdir);
+		while(procpoint && checkcount <= proccount)
 		{
 			//check if directoryname is an integer
 			if((pidtmp = strtol(procpoint->d_name, NULL, 10)) > 0)
@@ -177,16 +182,18 @@ int main(int argc, char** argv)
 				{
 					perror("Failed to access cmdfile!");
 				}
+				*cmd = (char*)malloc(BUFSIZE*sizeof(char));
+
 	
 				if((fgets(buffer, BUFSIZE, file)) != NULL)
 				{ 
-					*cmd = (char*)malloc(strlen(buffer)*sizeof(char));
+					//*cmd = (char*)malloc(BUFSIZE*sizeof(char));
 					strcpy(*cmd, buffer);
 					//puts(cmdline);
 				}
 				else
 				{	
-					*cmd = (char*)malloc(8*sizeof(char));
+					//*cmd = (char*)malloc(BUFSIZE*sizeof(char));
 					strcpy(*cmd, "[ZOMBIE]");
 					//puts(cmdline);
 				}
@@ -197,7 +204,10 @@ int main(int argc, char** argv)
 
 				free(path);
 				free(pidstr);
+				++checkcount;
 			}
+
+			procpoint = readdir(procdir);
 
 		}
 		pid = pidpos;
@@ -209,11 +219,18 @@ int main(int argc, char** argv)
 		int i = 0;
 		int j = 0;
 
-		for(i = 0; i < proccount; i++)
-		{
-			for(j = 1; j < proccount; j++)
-			{
+		//sort size
+		long int minval = 0L;
+		long int oldminval = 0L;
+		int min = 0;
 
+		minval = vmem[0];
+		for(j = 1; j < proccount; j++)
+		{
+			if(j != min && vmem[i] < minval)
+			{
+				minval = vmem[i];
+				min = j;
 			}
 		}
 
