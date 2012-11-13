@@ -106,6 +106,7 @@ int main(int argc, char const *argv[])
 
 	long int alo = s;
 	int allallo = 1;
+	printf("%s%d\n", "My PID: ", getpid());
 	while(gContinue)
 	{
 		if(allallo)
