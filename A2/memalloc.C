@@ -1,10 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <string.h>
 #include <unistd.h>
-#include <dirent.h>
 #include <signal.h>
 
 int gContinue = 1;

@@ -141,7 +141,7 @@ int main(int argc, char** argv)
 			/*long int*/ vmem = (long int*)malloc(proccount*sizeof(long int));
 			long int* vmempos = vmem;
 
-			char* state = (char*)malloc(proccount*sizeof(char));
+			char* state = (char*)malloc(proccount*(sizeof(char)+1));
 			char* statepos = state;
 
 			char** cmd = (char**)malloc(proccount*sizeof(char*));
@@ -185,27 +185,27 @@ int main(int argc, char** argv)
 					pid++; //increment pid pointer
 
 					//create string with pid for file access
-					char* pidstr = (char*)malloc(strlen(procpoint->d_name)*sizeof(char)); 
+					char* pidstr = (char*)malloc((strlen(procpoint->d_name) + 1)*sizeof(char)); 
 					strcpy(pidstr, procpoint->d_name); //save pid as string
 
 
 					//access status-file
-					int pathlength = strlen(PROCPATH) + strlen(STATUS) + strlen(pidstr);
+					int pathlength = strlen("/proc/") + strlen("/status") + strlen(pidstr) + 1;
 
 					char* path = (char*)malloc(pathlength*sizeof(char));
 
 					char* tmp;
 
 					//make status-path
-					strcpy(path, PROCPATH);
+					strcpy(path, "/proc/");
 					strcat(path, pidstr);
-					strcat(path, STATUS);
+					strcat(path, "/status");
 
-					file = NULL;
+					//file = NULL;
 					file = fopen(path, "r"); //open status file
 					if(file == NULL)
 					{
-						printf("%s\n", path);;
+						printf("%s\n", path);
 						perror("Failed to access statusfile!");
 						//return -1;
 					}
@@ -216,7 +216,6 @@ int main(int argc, char** argv)
 						{
 							if((fgets(buffer, BUFSIZE, file)) != NULL)
 							{	
-								//strcpy(statusline, buffer);
 								if(strncmp(buffer, "VmSize:", 7) == 0)
 								{
 									tmp = strtok(buffer, " ");
@@ -237,19 +236,18 @@ int main(int argc, char** argv)
 					//increment pointer
 					++vmem;
 					++state;
-
 					//close file and free path
 					free(path);
 
 					//access cmd-file
-					pathlength = strlen(PROCPATH) + strlen(CMD) + strlen(pidstr);
+					pathlength = strlen("/proc/") + strlen("/cmdline") + strlen(pidstr) + 1;
 					path = (char*)malloc(pathlength*sizeof(char));
 
-					strcpy(path, PROCPATH);
+					strcpy(path, "/proc/");
 					strcat(path, pidstr);
-					strcat(path, CMD);
+					strcat(path, "/cmdline");
 
-					file = NULL;
+					//file = NULL;
 					file = fopen(path, "r");
 					if(file == NULL)
 					{
@@ -348,10 +346,12 @@ int main(int argc, char** argv)
 			state = statepos;
 			cmd = cmdpos;
 
+			char** cmdtmp = cmd;
 			for(j = 0; j < proccount; j++)
 			{	
+				cmdtmp = cmd + 1;
 				free(*cmd);
-				cmd++;
+				cmd = cmdtmp;
 			}
 			cmd = cmdpos;
 			free(pid);
@@ -366,8 +366,5 @@ int main(int argc, char** argv)
 			sleep(t);
 			system("clear");
 		}
-
 	}
-
-
 }
