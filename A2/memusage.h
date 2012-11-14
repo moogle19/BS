@@ -11,9 +11,8 @@
 
 #define BUFSIZE 1024
 
-#define PROCPATH "/proc/"
-#define CMD "/cmdline"
-#define STATUS "/status"
-#define STAT "/stat"
+void handleSigInt(int );
+
+int sizeCmp(const void*, const void*);
 
 #endif

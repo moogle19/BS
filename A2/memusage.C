@@ -258,18 +258,27 @@ int main(int argc, char** argv)
 
 					}
 					else
-					{
-						if((fgets(buffer, BUFSIZE, file)) != NULL)
-						{ 
-							//*cmd = (char*)malloc(BUFSIZE*sizeof(char));
-							strcpy(*cmd, buffer);
-							//puts(cmdline);
-						}
-						else
-						{	
-							//*cmd = (char*)malloc(BUFSIZE*sizeof(char));
-							strcpy(*cmd, "[ZOMBIE]");
-							//puts(cmdline);
+					{	
+						int written = 1;
+						while (! feof(file))
+						{
+							if((fgets(buffer, BUFSIZE, file)) != NULL && written)
+							{ 
+								//*cmd = (char*)malloc(BUFSIZE*sizeof(char));
+								strcpy(*cmd, buffer);
+								written = 0;
+								//puts(cmdline);
+							}
+							else if((fgets(buffer, BUFSIZE, file)) != NULL && !written)
+							{
+								strcat(*cmd, buffer);
+							}
+							else if(written)
+							{	
+								//*cmd = (char*)malloc(BUFSIZE*sizeof(char));
+								strcpy(*cmd, "[ZOMBIE]");
+								//puts(cmdline);
+							}
 						}
 						fclose(file);
 					}
