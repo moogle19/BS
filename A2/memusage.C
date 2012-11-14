@@ -3,7 +3,7 @@
 int gContinue = 1;
 long int* vmem;
 
-void handleSigInt(int )
+void handleSigInt(int param)
 {
 	gContinue = 0;
 }
@@ -211,7 +211,6 @@ int main(int argc, char** argv)
 					}
 					else
 					{
-
 						while(! feof(file))
 						{
 							if((fgets(buffer, BUFSIZE, file)) != NULL)

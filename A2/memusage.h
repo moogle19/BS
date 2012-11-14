@@ -11,7 +11,7 @@
 
 #define BUFSIZE 1024
 
-void handleSigInt(int );
+void handleSigInt(int);
 
 int sizeCmp(const void*, const void*);
 
