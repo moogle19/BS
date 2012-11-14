@@ -206,8 +206,8 @@ int main(int argc, char** argv)
 					if(file == NULL)
 					{
 						printf("%s\n", path);
-						perror("Failed to access statusfile!");
-						//return -1;
+						perror("Failed to access statusfile!"); //no abort because this can happen without failure
+						//gContinue = 0;
 					}
 					else
 					{
@@ -253,8 +253,8 @@ int main(int argc, char** argv)
 					if(file == NULL)
 					{
 						perror("Failed to access cmdfile!");
-						strcpy(*cmd, "[CLOSED]");
-						//return -1;
+						strcpy(*cmd, "[CLOSED]"); //no abort because this can happen without failure
+						//gContinue = 0;
 
 					}
 					else
