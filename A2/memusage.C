@@ -221,6 +221,7 @@ int main(int argc, char** argv)
 									tmp = strtok(buffer, " ");
 									tmp = strtok(NULL, " ");
 									*vmem = strtol(tmp, NULL, 10);
+									*vmem *= 1024;
 								}
 								else if(strncmp(buffer, "State", 5) == 0)
 								{
@@ -331,7 +332,7 @@ int main(int argc, char** argv)
 				//print the entrys
 				for(j = 0; j < max; j++)
 				{
-					printf("%ld\t%ld\t%c\t%s\n", pid[*sorted], vmem[*sorted], state[*sorted], cmd[*sorted]);
+					printf("%ld\t%10ld\t%c\t%s\n", pid[*sorted], vmem[*sorted], state[*sorted], cmd[*sorted]);
 					sorted++;
 				}
 				sorted = sortedpos;
