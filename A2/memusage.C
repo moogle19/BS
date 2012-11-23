@@ -151,7 +151,7 @@ int main(int argc, char** argv)
 			for(cmdcount = 0; cmdcount < proccount; cmdcount++)
 			{
 				//initalize all values in case process count between loops is lowered
-				*cmd = (char*)malloc(BUFSIZE*sizeof(char));
+				*cmd = (char*)malloc(2048*sizeof(char));
 				strcpy(*cmd, "[No cmd]");
 
 				*pid = 0L;
@@ -246,7 +246,6 @@ int main(int argc, char** argv)
 					strcpy(path, "/proc/");
 					strcat(path, pidstr);
 					strcat(path, "/cmdline");
-
 					//file = NULL;
 					file = fopen(path, "r");
 					if(file == NULL)
@@ -258,8 +257,8 @@ int main(int argc, char** argv)
 					}
 					else
 					{	
-						int written = 1;
-						while (! feof(file))
+						int written = 0;
+						/*while (! feof(file))
 						{
 							if((fgets(buffer, BUFSIZE, file)) != NULL && written)
 							{ 
@@ -278,7 +277,49 @@ int main(int argc, char** argv)
 								strcpy(*cmd, "[ZOMBIE]");
 								//puts(cmdline);
 							}
-						}
+						}*/
+
+						char* ch = (char*)malloc(sizeof(char));
+						ch[0] = 'a';
+						do {
+      						ch[0] = fgetc(file);
+      						//printf("%c\n", ch[0]);
+      						if(ch[0] != EOF)
+	      					{
+	      						if(ch[0] == '\0')
+	      						{
+	      							//(*cmd)[cmdcount] = ' ';
+	   								if(written)
+	   								{
+	   									strcat(*cmd, " ");
+	   								}
+	   								else
+	   								{
+	      								strcpy(*cmd, " ");
+	      								written = 1;
+	      							}
+	      						}
+	      						else
+	      						{
+	      							if(written)
+	      							{
+	      								strcat(*cmd, ch);
+	      							}
+	      							else
+	      							{
+	      								strcpy(*cmd, ch);
+	      								written = 1;
+	      							}
+	      						}
+	      					}
+   						} while (ch[0] != EOF);
+   						if(!written)
+   						{
+   							strcpy(*cmd, "[ZOMBIE]");
+   						}
+   						printf("\n");
+   						free(ch);
+
 						fclose(file);
 					}
 
@@ -337,6 +378,10 @@ int main(int argc, char** argv)
 			}
 			else
 			{
+				if(max > proccount)
+				{
+					max = proccount;
+				}
 				//print the entrys
 				for(j = 0; j < max; j++)
 				{
