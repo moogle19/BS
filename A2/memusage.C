@@ -258,26 +258,6 @@ int main(int argc, char** argv)
 					else
 					{	
 						int written = 0;
-						/*while (! feof(file))
-						{
-							if((fgets(buffer, BUFSIZE, file)) != NULL && written)
-							{ 
-								//*cmd = (char*)malloc(BUFSIZE*sizeof(char));
-								strcpy(*cmd, buffer);
-								written = 0;
-								//puts(cmdline);
-							}
-							else if((fgets(buffer, BUFSIZE, file)) != NULL && !written)
-							{
-								strcat(*cmd, buffer);
-							}
-							else if(written)
-							{	
-								//*cmd = (char*)malloc(BUFSIZE*sizeof(char));
-								strcpy(*cmd, "[ZOMBIE]");
-								//puts(cmdline);
-							}
-						}*/
 
 						char* ch = (char*)malloc(sizeof(char));
 						ch[0] = 'a';
