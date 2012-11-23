@@ -358,10 +358,12 @@ int main(int argc, char** argv)
 			}
 			else
 			{
+				//check if wanted output is bigger than possible output
 				if(max > proccount)
 				{
 					max = proccount;
 				}
+
 				//print the entrys
 				for(j = 0; j < max; j++)
 				{
