@@ -12,7 +12,7 @@ int sizeCmp(const void* val1, const void* val2)
 {
 	int* value1 = (int*)val1;
 	int* value2 = (int*)val2;
-	if(vmem[*value1] < vmem[*value2])
+	if(vmem[*value1] > vmem[*value2])
 	{
 		return -1;
 	}

@@ -45,8 +45,9 @@ int main(int argc, char const *argv[])
 			tmp = strtol(argv[++i], NULL, 10);
 			if(tmp == 0L)
 			{
-				printf("%s\n", "Wrong input!");
-			} //test
+				printf("%s\n", "Wrong input <no integer>! Usage: ./memalloc [-M <max>] [-S <step>] [-T <timestep>]");
+				return -1;
+			}
 			else
 			{
 				m = tmp;
@@ -58,8 +59,9 @@ int main(int argc, char const *argv[])
 			tmp = strtol(argv[++i], NULL, 10);
 			if(tmp == 0L)
 			{
-				printf("%s\n", "Wrong input");
-			} //test
+				printf("%s\n", "Wrong input <no integer>! Usage: ./memalloc [-M <max>] [-S <step>] [-T <timestep>]");
+				return -1;
+			}
 			else
 			{
 				s = tmp;
@@ -71,8 +73,9 @@ int main(int argc, char const *argv[])
 			tmp = strtol(argv[++i], NULL, 10);
 			if(tmp == 0L)
 			{
-				printf("%s\n", "Wrong input");
-			} //test
+				printf("%s\n", "Wrong input <no interger>! Usage: ./memalloc [-M <max>] [-S <step>] [-T <timestep>]");
+				return -1;
+			}
 			else
 			{
 				t = tmp;
@@ -82,9 +85,14 @@ int main(int argc, char const *argv[])
 		}
 		else
 		{
-			printf("%s\n" , "Wrong input! Usage: ./memusage [-m] [-N <num>] [-T <sec>] [-P <pid>]");
+			printf("%s\n" , "Wrong input! Usage: ./memalloc [-M <max>] [-S <step>] [-T <timestep>]");
 			return -1;
 		}
+	}
+	if(mc || sc || tc)
+	{
+		printf("%s\n" , "Wrong input <all Params required>! Usage: ./memalloc [-M <max>] [-S <step>] [-T <timestep>]");
+		return -1;
 	}
 	if(m < s)
 	{
