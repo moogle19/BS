@@ -259,14 +259,15 @@ int main(int argc, char** argv)
 					{	
 						int written = 0;
 
-						char* ch = (char*)malloc(sizeof(char));
+						char* ch = (char*)malloc(2*sizeof(char));
 						ch[0] = 'a';
+						ch[1] = '\0';
 						do {
-      						ch[0] = fgetc(file);
+      						*ch = fgetc(file);
       						//printf("%c\n", ch[0]);
-      						if(ch[0] != EOF)
+      						if(*ch != EOF)
 	      					{
-	      						if(ch[0] == '\0')
+	      						if(*ch == '\0')
 	      						{
 	      							//(*cmd)[cmdcount] = ' ';
 	   								if(written)
@@ -292,7 +293,7 @@ int main(int argc, char** argv)
 	      							}
 	      						}
 	      					}
-   						} while (ch[0] != EOF);
+   						} while (*ch != EOF);
    						if(!written)
    						{
    							strcpy(*cmd, "[ZOMBIE]");
@@ -339,6 +340,7 @@ int main(int argc, char** argv)
 			//set variable for max output
 			long int max = proccount;
 
+			printf("%s\t%10s\t%s\t%s\n", "[PID]", "[VMEM]", "[STATE]", "[CMDLINE]");
 			//if n is set max output = n
 			if(n)
 			{
@@ -351,7 +353,7 @@ int main(int argc, char** argv)
 				{
 					if(p == pid[j])
 					{
-						printf("%ld\t%ld\t%c\t%s\n", pid[j], vmem[j], state[j], cmd[j]);
+						printf("%ld\t%10ld\t%c\t%s\n", pid[j], vmem[j], state[j], cmd[j]);
 					}
 				}
 
