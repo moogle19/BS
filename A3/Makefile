@@ -11,8 +11,11 @@ readwritelocktest: readwritelocktest.o
 readwritelockprio: readwritelockprio.o
 	gcc -Wall -o readwritelockrio readwritelockprio.c
 
+priosched: priosched.o
+	gcc -Wall -o priosched priosched.c
+
 %.o: %.c %.h
-	gcc -Wall -c $<
+	gcc -Wall -c $< -lpthread
 
 clean:
-	rm -rf *.o readwritelock readwritelocktest readwritelockprio
+	rm -rf *.o readwritelock readwritelocktest readwritelockprio priosched	
