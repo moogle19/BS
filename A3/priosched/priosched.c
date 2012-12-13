@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 	for(i = 1; i < 10; i++)
     	forking(i);
 
-    sleep(100);
+    //sleep(100);
  
    	return 0;
 }
