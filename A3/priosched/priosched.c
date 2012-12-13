@@ -23,7 +23,6 @@ double counter(long int max)
 
  int forking(int i, long int nvals[], long int countTo)
  {
-   	//int status = 0;
    	pid_t pid;
       
    	pid = fork ();
@@ -33,28 +32,20 @@ double counter(long int max)
         int which = PRIO_PROCESS;
    		id_t id = getpid();
    		setpriority(which, id, (int)nvals[i]);
-		//printf("%s%d%s%d\n", "Child: ", i, "PID: ",getpid());
-		//counter(100000000000000);
+        
 		while(1)
 		{
 			printf("%s%d%s%f\n", "Child: ", i, "Time: ", counter(countTo));
 		}
+		
     	exit(EXIT_SUCCESS);
    	}
    
    	else if(pid < 0)
    	{
-    	 /* The fork failed */
-     	//printf("Failed to fork(): %s\n", command);
      	status[i] = -1;
    	}	    
-   	/*else
-    {
-     	if(wait(&status) != pid)
-        {
-            status = -1;
-        }
-    }*/
+
   	return status[i];
 }
  
@@ -109,7 +100,6 @@ int main(int argc, char *argv[])
     
     status = malloc(sizeof(int) * proccount);
     
-    //puts(endptr);
 	for(i = 0; i < proccount; i++)
 	{
        forking(i, nicevals, countTo);
@@ -119,7 +109,6 @@ int main(int argc, char *argv[])
       wait(&(status[i]));
     }
     free(status);
-    //sleep(100);
  
    	return 0;
 }
