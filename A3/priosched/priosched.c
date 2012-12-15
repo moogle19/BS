@@ -5,60 +5,54 @@
 #include <sys/wait.h>
 #include <sys/resource.h>
 #include <sys/types.h>
+#include <errno.h>
 
 int *status;
+int gContinue = 1;
 
-double counter(long int max)
+void handleSigInt(int param)
 {
-	struct timeval start, end;
-	long int i = 0;
-	gettimeofday(&start, NULL);
-	for(i = 0; i < max; i++)
-	gettimeofday(&end, NULL);
-
-	double diff = ((double)end.tv_sec + ((double)end.tv_usec)/1000000) - (((double)start.tv_sec + ((double)start.tv_usec)/1000000));
-	return diff;
+    gContinue = 0;
 }
 
 
- int forking(int i, long int nvals[], long int countTo)
- {
-   	pid_t pid;
-      
-   	pid = fork ();
-   
-	if(pid == 0)
-   	{	
-        int which = PRIO_PROCESS;
-   		id_t id = getpid();
-   		setpriority(which, id, (int)nvals[i]);
-        
-		while(1)
-		{
-			printf("%s%d%s%f\n", "Child: ", i, "Time: ", counter(countTo));
-		}
-		
-    	exit(EXIT_SUCCESS);
-   	}
-   
-   	else if(pid < 0)
-   	{
-     	status[i] = -1;
-   	}	    
+double counter(long int max)
+{
+    struct timeval start, end;
+    long int i = 0;
+    gettimeofday(&start, NULL);
+    for(i = 0; i < max; i++)
+    
+    gettimeofday(&end, NULL);
 
-  	return status[i];
+    double diff = ((double)end.tv_sec + ((double)end.tv_usec)/1000000) - (((double)start.tv_sec + ((double)start.tv_usec)/1000000));
+    return diff;
+}
+
+int getUsage()
+{
+    puts("Wrong input! Usage: ./priosched [COUNTMAX(>0)] [PROCESSCOUNT(>0)] [NICEVAL 1] ... [NICEVAL N]");
+    return -1;  
+}
+
+int getNiceUsage()
+{
+    puts("Nice Value must be between 0 and 19");
+    return -1;
 }
  
 int main(int argc, char *argv[])
 { 
-	int i;
+    int i;
+
+    signal(SIGINT, handleSigInt);
+
     
     //input
     
     if(argc < 3)
     {
-      puts("Wrong input! Usage: ./priosched [COUNTMAX(>0)] [PROCESSCOUNT(>0)] [NICEVAL 1] ... [NICEVAL N]");
-      return -1;
+        return getUsage();
     }
     
     char *endptr = NULL;
@@ -67,16 +61,14 @@ int main(int argc, char *argv[])
     
     if(*endptr || countTo <= 0)
     {
-      puts("Wrong input! Usage: ./priosched [COUNTMAX(>0)] [PROCESSCOUNT(>0)] [NICEVAL 1] ... [NICEVAL N]");
-      return -1;
+        return getUsage();
     }
         
     long int proccount =  strtol(argv[2], &endptr, 10);
     
     if(*endptr || argc != (proccount + 3) || proccount <= 0)
     {
-      puts("Wrong input! Usage: ./priosched [COUNTMAX(>0)] [PROCESSCOUNT(>0)] [NICEVAL 1] ... [NICEVAL N]");
-      return -1;
+        return getUsage();
     }
     
     long int nicevals[proccount];
@@ -84,31 +76,57 @@ int main(int argc, char *argv[])
     
     for(i = 3; i < proccount + 3; i++)
     {
-      nicevals[i-3] = strtol(argv[i], &endptr, 10);
+        nicevals[i-3] = strtol(argv[i], &endptr, 10);
       
-      if(nicevals[i-3] < 0 || nicevals[i-3] > 19)
-      {
-        puts("Nice Value must be between 0 and 19");
-        return -1;
-      }
-      else if(*endptr)
-      {
-      puts("Wrong input! Usage: ./priosched [COUNTMAX(>0)] [PROCESSCOUNT(>0)] [NICEVAL 1] ... [NICEVAL N]");
-        return -1;
-      }
+        if(nicevals[i-3] < 0 || nicevals[i-3] > 19)
+        {
+            return getNiceUsage();
+        }
+        else if(*endptr)
+        {
+            return getUsage();
+        }
     }
     
-    status = malloc(sizeof(int) * proccount);
-    
-	for(i = 0; i < proccount; i++)
-	{
-       forking(i, nicevals, countTo);
-	}
-	for(i = 0; i < proccount; i++)
+    id_t *ids = malloc(proccount * sizeof(id_t));
+    for(i = 0; i < proccount; i++)
     {
-      wait(&(status[i]));
+        ids[i] = 0;
     }
-    free(status);
+    pid_t pid;
+    
+    for(i = 0; i < proccount; i++)
+    {    
+        pid = fork();
+   
+        if(pid == 0)
+        {   
+            int which = PRIO_PROCESS;
+            ids[i] = getpid();
+            setpriority(which, ids[i], (int)nicevals[i]);
+            //free(ids);
+        
+            while(gContinue)
+            {
+                printf("%s%d%s%f\n", "Child: ", i, "Time: ", counter(countTo));
+            }
+            free(ids);
+        
+            exit(EXIT_SUCCESS);
+        }
+   
+        else if(pid < 0)
+        {
+            //status[i] = -1;
+        }     
+    }
+
+    for(i = 0; i < proccount; i++)
+    {
+        int stat;
+        while (-1 == waitpid(ids[i], &stat, 0));
+    }
+    free(ids);
  
    	return 0;
 }

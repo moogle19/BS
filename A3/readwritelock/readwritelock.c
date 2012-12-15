@@ -1,63 +1,16 @@
 #include "readwritelock.h"
 
-struct rwlock rwl;
-int i = 0;
-
-void *thread(void *vargp)
+void rwlock_getInfo(struct rwlock *lock)
 {
-	rwlock_lockWrite(&rwl);
-	int k = 0;
-	for(k = 0; k < 100; k++)
-    {
-		i = i + 1;
-	}
-	rwlock_unlock(&rwl);
-    
-	printf("%d\n", i);
-	return NULL;
+	printf("WC: %d RC: %d WWC: %d\n", lock->writecount, lock->readcount, lock->writewaitcount);
+
 }
-
-int main(void)
-{	
-	rwlock_init(&rwl);
-    rwlock_lockRead(&rwl);
-    rwlock_unlock(&rwl);
-    
-	int j = 0;
-	pthread_t threads[100]; 
-	int thread_args[100];
-	for(j = 0; j < 100; j++)
-	{
-		pthread_create(&threads[j], NULL, thread, &thread_args[j]);
-	}
-	for(j = 0; j < 100; j++)
-	{
-	    pthread_join(threads[j],NULL); 
-	}
-    return 1;
-}
-
-
-struct rwlock
-{
-	pthread_mutex_t readmutex;
-	pthread_mutex_t writemutex;
-	pthread_cond_t writecondition;
-	pthread_cond_t readcondition;
-    int readcount;
-    int writecount;
-};
 
 void rwlock_init(struct rwlock *lock)
 {
-	if(pthread_mutex_init(&(lock->readmutex), 0) < 0)
+	if(pthread_mutex_init(&(lock->lockmutex), 0) < 0)
 	{
 		perror("Init of readmutex failed!");
-	}
-	
-	if(pthread_mutex_init(&(lock->writemutex), 0) < 0)
-	{
-		perror("Init of writemutex failed!");
 	}
 	
 	if(pthread_cond_init(&(lock->writecondition), 0) < 0)
@@ -73,6 +26,8 @@ void rwlock_init(struct rwlock *lock)
 	lock->readcount = 0;
     
     lock->writecount = 0;
+
+    lock->writewaitcount = 0;
 	
 	//lock = &ret;
 	puts("initied");
@@ -80,22 +35,97 @@ void rwlock_init(struct rwlock *lock)
 
 void rwlock_lockRead(struct rwlock *lock)
 {   
-    (lock->readcount)++;
-	if(pthread_mutex_lock(&(lock->readmutex)) < 0)
+    if(pthread_mutex_lock(&(lock->lockmutex)) < 0)
+    {
+    	perror("Mutex lock failed!");
+    }
+	while(lock->writecount > 0)
 	{
-		perror("Mutex lock failed!");
-	} 
+    	pthread_cond_wait(&(lock->readcondition), &(lock->lockmutex));
+    }
+    lock->readcount++; 
+
+
+    if(pthread_mutex_unlock(&(lock->lockmutex)) < 0)
+    {
+    	perror("Mutex unlock failed");
+    }
 }
 
 void rwlock_lockWrite(struct rwlock *lock)
 {
-    (lock->writecount)++;
-	if(pthread_mutex_lock(&(lock->writemutex)) < 0)
+	if(pthread_mutex_lock(&(lock->lockmutex)) < 0)
+    {
+    	perror("Mutex lock failed!");
+    }
+	lock->writewaitcount++;
+	while(lock->readcount > 0 || lock->writecount > 0)
 	{
-		perror("Mutex lock failed!");
+		pthread_cond_wait(&(lock->writecondition), &(lock->lockmutex));
 	}
+	lock->writewaitcount--; 
+	lock->writecount++;
+	if(pthread_mutex_unlock(&(lock->lockmutex)) < 0)
+    {
+    	perror("Mutex unlock failed");
+    }
 }
+
 void rwlock_unlock(struct rwlock *lock)
 {
-	pthread_mutex_unlock(&(lock->writemutex));
+	//writeunlock
+	if(lock->writecount > 0)
+	{
+		if(pthread_mutex_lock(&(lock->lockmutex)) < 0)
+    	{
+    		perror("Mutex lock failed!");
+    	}
+
+
+		lock->writecount--;
+		if(lock->writecount > 0)
+		{
+			pthread_cond_signal(&(lock->writecondition));
+		}
+		else
+		{
+    		pthread_cond_broadcast(&(lock->readcondition));
+		}
+
+
+		if(pthread_mutex_unlock(&(lock->lockmutex)) < 0)
+		{
+    		perror("Mutex unlock failed");
+    	}
+	}
+	//readunlock
+	else if(lock->readcount > 0)
+	{
+		if(pthread_mutex_lock(&(lock->lockmutex)) < 0)
+    	{
+    		perror("Mutex lock failed!");
+    	}
+
+
+		lock->readcount--;
+		if(lock->readcount == 0 && lock->writecount > 0)
+		{
+			pthread_cond_signal(&(lock->writecondition));
+		}
+
+
+		if(pthread_mutex_unlock(&(lock->lockmutex)) < 0)
+		{
+    		perror("Mutex unlock failed");
+    	}
+    }
+	
+}
+
+void rwlock_destroy(struct rwlock *lock)
+{
+	pthread_mutex_destroy(&(lock->lockmutex));
+	pthread_cond_destroy(&(lock->readcondition));
+	pthread_cond_destroy(&(lock->writecondition));
+
 }
