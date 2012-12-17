@@ -1,13 +1,14 @@
 #include "readwritelock.h"
 
-//struct rwlock rwl;
+struct rwlock rwl;
 int i = 0;
 
 void *threadread(void *vargp)
 {
-	//rwlock_lockRead(&rwl);
+	rwlock_lockRead(&rwl);
     printf("%s%d\n", "Value: ", i);
-	//rwlock_unlock(&rwl);
+	rwlock_getInfo(&rwl);
+	rwlock_unlock(&rwl);
 	//rwlock_getInfo(&rwl);
     
     return NULL;
@@ -15,10 +16,11 @@ void *threadread(void *vargp)
 
 void *threadwrite(void *vargp)
 {
-	//rwlock_lockWrite(&rwl);
+	rwlock_lockWrite(&rwl);
 	printf("%s\n", "Writing.....");
 	i = i + 1;
-	//rwlock_unlock(&rwl);
+	rwlock_getInfo(&rwl);
+	rwlock_unlock(&rwl);
 
 	//rwlock_getInfo(&rwl);
 
@@ -27,7 +29,7 @@ void *threadwrite(void *vargp)
 
 int main(void)
 {	
-	//rwlock_init(&rwl);
+	rwlock_init(&rwl);
     //rwlock_lockRead(&rwl);
     //rwlock_unlock(&rwl);
     

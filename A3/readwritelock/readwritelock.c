@@ -83,7 +83,7 @@ void rwlock_unlock(struct rwlock *lock)
 
 
 		lock->writecount--;
-		if(lock->writecount > 0)
+		if(lock->writewaitcount > 0)
 		{
 			pthread_cond_signal(&(lock->writecondition));
 		}
@@ -108,7 +108,7 @@ void rwlock_unlock(struct rwlock *lock)
 
 
 		lock->readcount--;
-		if(lock->readcount == 0 && lock->writecount > 0)
+		if(lock->readcount == 0 && lock->writewaitcount > 0)
 		{
 			pthread_cond_signal(&(lock->writecondition));
 		}
