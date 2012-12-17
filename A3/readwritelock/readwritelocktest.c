@@ -1,29 +1,28 @@
 #include "readwritelock.h"
 
-struct rwlock rwl;
+//struct rwlock rwl;
 int i = 0;
 
 void *threadread(void *vargp)
 {
-	rwlock_lockRead(&rwl);
+	//rwlock_lockRead(&rwl);
     printf("%s%d\n", "Value: ", i);
-	rwlock_unlock(&rwl);
-	rwlock_getInfo(&rwl);
-
-	pthread_exit(NULL);
+	//rwlock_unlock(&rwl);
+	//rwlock_getInfo(&rwl);
+    
+    return NULL;
 }
 
 void *threadwrite(void *vargp)
 {
-	rwlock_lockWrite(&rwl);
+	//rwlock_lockWrite(&rwl);
 	printf("%s\n", "Writing.....");
 	i = i + 1;
-	rwlock_unlock(&rwl);
+	//rwlock_unlock(&rwl);
 
-	rwlock_getInfo(&rwl);
+	//rwlock_getInfo(&rwl);
 
-
-	pthread_exit(NULL);
+    return NULL;
 }
 
 int main(void)
@@ -48,12 +47,18 @@ int main(void)
 			pthread_create(&threads[j], NULL, threadwrite, (void *) t);
 		}
 	}
-	/*for(j = 0; j < threadoffset; j++)
+	
+	for(j = 0; j < threadoffset * 2; j++)
 	{
+        //pthread_detach(threads[j]);
 	    pthread_join(threads[j],NULL);
-	}*/
+	}
 
 	free(threads);
-	rwlock_destroy(&rwl);
-	pthread_exit(NULL);
+    //sleep(1);
+
+	//rwlock_destroy(&rwl);
+	//pthread_exit(NULL);
+    
+    exit(EXIT_SUCCESS);
 }
