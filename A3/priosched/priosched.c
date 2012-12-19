@@ -9,6 +9,7 @@
 
 int *status;
 int gContinue = 1;
+int breakup = 0;
 
 void handleSigInt(int param)
 {
@@ -22,6 +23,14 @@ double counter(long int max)
     long int i = 0;
     gettimeofday(&start, NULL);
     for(i = 0; i < max; i++)
+    {
+        if(!gContinue)
+        {
+            breakup = 1;
+            break;
+        }
+    }
+
     
     gettimeofday(&end, NULL);
 
@@ -49,35 +58,39 @@ int main(int argc, char *argv[])
 
     
     //input
-    
+    //check if more then 3 arguments (min)
     if(argc < 3)
     {
         return getUsage();
     }
     
     char *endptr = NULL;
-    
+    //get value to count to
     long int countTo = strtol(argv[1], &endptr, 10);
     
+    //check if input is valid and greater than 0
     if(*endptr || countTo <= 0)
     {
         return getUsage();
     }
-        
-    long int proccount =  strtol(argv[2], &endptr, 10);
     
+    long int proccount =  strtol(argv[2], &endptr, 10);
+
+    //check if nicevaluecount input is valid
     if(*endptr || argc != (proccount + 3) || proccount <= 0)
     {
         return getUsage();
     }
     
+    //array for the nice vals
     long int nicevals[proccount];
     
     
     for(i = 3; i < proccount + 3; i++)
     {
         nicevals[i-3] = strtol(argv[i], &endptr, 10);
-      
+        
+        //check if nice value between 0 and 19 (max range for non-root users)
         if(nicevals[i-3] < 0 || nicevals[i-3] > 19)
         {
             return getNiceUsage();
@@ -88,6 +101,7 @@ int main(int argc, char *argv[])
         }
     }
     
+    //initalize pointer for processess
     id_t *ids = malloc(proccount * sizeof(id_t));
     for(i = 0; i < proccount; i++)
     {
@@ -105,13 +119,20 @@ int main(int argc, char *argv[])
             ids[i] = getpid();
             setpriority(which, ids[i], (int)nicevals[i]);
             //free(ids);
-        
+            int c = 1;
+            double count = 0, sum = 0;
             while(gContinue)
-            {
-                printf("%s%d%s%f\n", "Child: ", i, "Time: ", counter(countTo));
+            {   
+                count = counter(countTo);
+                if(!breakup)
+                {
+                    sum += count;
+                    printf("%s%d%s%f%s%f\n", "Child: ", i, "Time: ", count, " Avg: ", sum/c);
+                    ++c;
+                }
             }
             free(ids);
-        
+
             exit(EXIT_SUCCESS);
         }
    
@@ -128,5 +149,5 @@ int main(int argc, char *argv[])
     }
     free(ids);
  
-   	return 0;
+   	exit(EXIT_SUCCESS);
 }

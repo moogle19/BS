@@ -8,6 +8,7 @@ void *threadreadlock(void *vargp)
 {
 	rwlock_lockRead(&rwl); //read lock
     printf("%s%d\n", "Value: ", i); //read and print value
+    rwlock_getInfo(&rwl);
 	rwlock_unlock(&rwl); //read unlock
     
     return NULL;
@@ -20,6 +21,8 @@ void *threadwritelock(void *vargp)
 	rwlock_lockWrite(&rwl); //write lock
 	printf("%s\n", "Writing.....");
 	i = i + 1; //increase value
+    rwlock_getInfo(&rwl);
+
 	rwlock_unlock(&rwl); //write unlock
 
     return NULL;
