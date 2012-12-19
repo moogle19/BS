@@ -11,12 +11,13 @@ int *status;
 int gContinue = 1;
 int breakup = 0;
 
+//signal handler for good cleanup
 void handleSigInt(int param)
 {
     gContinue = 0;
 }
 
-
+//counter to max
 double counter(long int max)
 {
     struct timeval start, end;
@@ -38,12 +39,14 @@ double counter(long int max)
     return diff;
 }
 
+//get usage of programm
 int getUsage()
 {
     puts("Wrong input! Usage: ./priosched [COUNTMAX(>0)] [PROCESSCOUNT(>0)] [NICEVAL 1] ... [NICEVAL N]");
     return -1;  
 }
 
+//get the Nice usage
 int getNiceUsage()
 {
     puts("Nice Value must be between 0 and 19");
@@ -54,6 +57,7 @@ int main(int argc, char *argv[])
 { 
     int i;
 
+    //catch SIGINT and call handler
     signal(SIGINT, handleSigInt);
 
     
@@ -109,6 +113,7 @@ int main(int argc, char *argv[])
     }
     pid_t pid;
     
+    //fork proccount times
     for(i = 0; i < proccount; i++)
     {    
         pid = fork();
@@ -117,8 +122,8 @@ int main(int argc, char *argv[])
         {   
             int which = PRIO_PROCESS;
             ids[i] = getpid();
+            //set nice value
             setpriority(which, ids[i], (int)nicevals[i]);
-            //free(ids);
             int c = 1;
             double count = 0, sum = 0;
             while(gContinue)
@@ -138,13 +143,14 @@ int main(int argc, char *argv[])
    
         else if(pid < 0)
         {
-            //status[i] = -1;
+            perror("Something went wrong with the forking");
         }     
     }
 
     for(i = 0; i < proccount; i++)
     {
         int stat;
+        //wait for all childs to end
         while (-1 == waitpid(ids[i], &stat, 0));
     }
     free(ids);
