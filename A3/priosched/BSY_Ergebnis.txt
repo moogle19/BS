@@ -1,0 +1,22 @@
+Systeminformationen:
+    Hardware:
+    
+        Intel Core i5 3427U (Dual-Core mit Hyper-Threading) 1,8Ghz (mit Turbo-Boost bis zu 2,8Ghz)
+        8192MB Ram
+        Intel HD 4000 Graphics
+    In VM:
+        2 Cores
+        4096MB Ram
+        
+        
+    Messungen:
+        Es wurden 5 Messungen pro Nice-Wert (0-19) durchgeführt. Die Anzahl der Messwerte pro Messung schwankt von 78 - 942. Bei hohem Prioritätswert war eine längere Messdauer nötig, da die Zeit, die der Prozess brauchte sehr groß wurde.
+        
+        Meine Messung wurde ausgeführt mit: ./priosched 10000000 3 0 0 N
+        
+        mit N zwischen 0 und 19
+        
+    Ergebnis der Messung:
+        Im angehängten PDF erkennt man, das die Dauer des Prozesses mit linearem Anstieg der nice-Werts, exponentiell steigt. Bei den nice-Werten 16 und 17 kam es zu Messungenauigkeiten. Obwohl der nice-Wert ziemlich hoch gewählt wurde, lief der Prozess am Anfang schnell. Dies liegt wahrscheinlich daran, dass der Prozess vor den anderen beiden gestartet wird.
+        Die Dauer der anderen beiden Prozesse, welche durchgehend den nice-Wert 0 haben, sinkt nur vergleichsweise wenig. 
+        
