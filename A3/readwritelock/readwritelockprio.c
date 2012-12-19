@@ -6,9 +6,6 @@ void rwlock_getInfo(struct rwlock *lock)
 
 }
 
-/**
- * initalize read-write lock
- */
 void rwlock_init(struct rwlock *lock)
 {
 	if(pthread_mutex_init(&(lock->lockmutex), 0) < 0)
@@ -36,16 +33,13 @@ void rwlock_init(struct rwlock *lock)
 	puts("initied");
 }
 
-/**
- * lock for read operations
- */
 void rwlock_lockRead(struct rwlock *lock)
 {   
     if(pthread_mutex_lock(&(lock->lockmutex)) < 0)
     {
     	perror("Mutex lock failed!");
     }
-	while(lock->writecount > 0)
+	while(lock->writecount > 0 || lock->writewaitcount > 0)
 	{
     	pthread_cond_wait(&(lock->readcondition), &(lock->lockmutex));
     }
@@ -58,9 +52,6 @@ void rwlock_lockRead(struct rwlock *lock)
     }
 }
 
-/**
- * lock for write operations
- */
 void rwlock_lockWrite(struct rwlock *lock)
 {
 	if(pthread_mutex_lock(&(lock->lockmutex)) < 0)
@@ -80,9 +71,6 @@ void rwlock_lockWrite(struct rwlock *lock)
     }
 }
 
-/**
- *  unlock
- */
 void rwlock_unlock(struct rwlock *lock)
 {
 	//writeunlock
@@ -120,7 +108,7 @@ void rwlock_unlock(struct rwlock *lock)
 
 
 		lock->readcount--;
-		if(lock->readcount == 0 && lock->writewaitcount > 0)
+		if(lock->writewaitcount > 0)
 		{
 			pthread_cond_signal(&(lock->writecondition));
 		}
