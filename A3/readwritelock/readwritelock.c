@@ -45,7 +45,7 @@ void rwlock_lockRead(struct rwlock *lock)
     {
     	perror("Mutex lock failed!");
     }
-	while(lock->writecount > 0)
+	while(lock->writecount > 0 || lock->writewaitcount > 0)
 	{
     	pthread_cond_wait(&(lock->readcondition), &(lock->lockmutex));
     }
