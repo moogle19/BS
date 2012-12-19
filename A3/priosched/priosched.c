@@ -31,7 +31,6 @@ double counter(long int max)
             break;
         }
     }
-
     
     gettimeofday(&end, NULL);
 
@@ -132,7 +131,7 @@ int main(int argc, char *argv[])
                 if(!breakup)
                 {
                     sum += count;
-                    printf("%s%d%s%f%s%f\n", "Child: ", i, "Time: ", count, " Avg: ", sum/c);
+                    printf("%d%s%f\n", i, " ", count);
                     ++c;
                 }
             }
